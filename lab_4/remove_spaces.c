@@ -10,12 +10,12 @@ char *remove_spaces(const char *str, int *count)
     int str_len = strlen(str);
     char *res = calloc(str_len + 1, sizeof(char));
     if (res == NULL) {
-        printf("Ошибка выделения памяти\n");
+        printf("Ошибка выделения памяти.\n");
         return NULL;
     }
     char *s = strdup(str);
     if (s == NULL) {
-        printf("Ошибка выделения памяти\n");
+        printf("Ошибка выделения памяти.\n");
         return NULL;
     }
     char *word = strtok(s, SYMBOLS);
@@ -35,7 +35,7 @@ char *remove_spaces(const char *str, int *count)
     res[len]='\0';
     char *b = realloc(res, (len+1)*sizeof(char));
     if (b == NULL) {
-        printf("Ошибка выделения памяти");
+        printf("Ошибка выделения памяти.");
         return NULL;
     }
     res = b;

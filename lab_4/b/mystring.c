@@ -76,19 +76,6 @@ char *mystrncpy(char *paste, const char *copy, size_t n)
     return paste;
 }
 
-char *mystrpbrk(const char *cs,const char *ct) // хлам, но жалко убирать, сначала пытался реализовать strtok через это
-{
-    size_t i, j;
-    for (i = 0; cs[i] != '\0'; i++) {
-        for (j = 0; ct[j] != '\0'; j++) {
-            if (cs[i] == ct[j]) {
-                return (char *)&cs[i];
-            }
-        }
-    }
-    return NULL;
-}
-
 size_t mystrspn(const char *cs, const char *ct)
 {
     size_t len = 0, i, j;

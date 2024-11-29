@@ -8,15 +8,15 @@ int sort(const char *new_str, int count)
     char *s = strdup(new_str);
     int *len = malloc(sizeof(int) * count);
     char **words = malloc(sizeof(char *) * count);
-    if (s == NULL || len == NULL || *words == NULL) {
-        printf("Ошибка выделения памяти\n");
+    if (s == NULL || len == NULL || words == NULL) {
+        printf("Ошибка выделения памяти.\n");
         return 1;
     }
     char *word = strtok(s, SYMBOLS);
     for (int i = 0; i < count && word != NULL; i++) {
         words[i] = strdup(word);
         if (words[i] == NULL) {
-            printf("Ошибка выделения памяти\n");
+            printf("Ошибка выделения памяти.\n");
             return 1;
         }
         len[i] = strlen(word);
