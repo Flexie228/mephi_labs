@@ -12,7 +12,7 @@ char *myreadline()
     printf(PROMPT);
 
     do {
-	n = scanf("%[^\n]", temp);
+	n = scanf("%8191[^\n]", temp);
 	if (n < 0) {
 	    if (!res) {
 		printf("Обнаружен конец файла\n");

@@ -1,8 +1,10 @@
 #ifndef KAF_12
 #define KAF_12
 
-#define SYMBOLS " \t"
-#define PROMPT "Вводите строчку: "
+#define SYMBOLS	" \t"
+#define PROMPT	"Вводите строчку: "
+#define BUFSIZ	8192
+
 char *myreadline();
 char *remove_spaces(const char *str, int *count);
 char *mystrncpy(char *paste, const char *copy, size_t n);
