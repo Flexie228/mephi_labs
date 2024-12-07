@@ -9,7 +9,6 @@ char *myreadline()
     char *res = NULL;
     int len = 0;
     int n = 0;
-
     printf(PROMPT);
 
     do {
@@ -23,7 +22,12 @@ char *myreadline()
 	else if (n > 0) {
 	    int chunk_len = mystrlen(temp);
 	    int str_len = len + chunk_len;
-	    res = realloc(res, str_len + 1);
+	    char *b = realloc(res, str_len + 1);
+	    if (b == NULL) {
+		printf("Произошла ошибка выделения памяти.");
+		return NULL;
+	    }
+	    res = b;
 	    mymemcpy(res + len, temp, chunk_len);
 	    len = str_len;
 	}
@@ -37,6 +41,10 @@ char *myreadline()
     }
     else {
 	res = calloc(1, sizeof(char));
+	if (res == NULL) {
+	    printf("Произошла ошибка выделения памяти.");
+	    return NULL;
+	}
     }
     return res;
 }
