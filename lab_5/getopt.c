@@ -2,9 +2,10 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <errno.h>
 #include <readline/readline.h>
 
-#define BUFSIZ		8192
+#define BUF		2048
 #define PROMPT_ID       "Введите ID (8 символов): "
 #define PROMPT_NAME     "Введите название: "
 #define PROMPT_COUNT    "Введите количество: "
@@ -16,11 +17,12 @@ struct Product {
     size_t count;
 };
 
-int input_int(size_t *num);
+void copy_stream(FILE *input, FILE *output);
+/*int input_int(size_t *num);
 int input_char(char *symbol);
 int product_new(struct Product **products, size_t *pos);
 void product_print(const struct Product *products, size_t pos);
-
+*/
 int main(int argc, char *argv[])
 {
     int opt;
@@ -28,17 +30,19 @@ int main(int argc, char *argv[])
     int iflag = 0;
     int oflag = 0;
     int aflag = 0;
-    FILE *input_file = NULL;
-    FILE *output_file = NULL;
+    FILE *input_file = stdin;
+    FILE *output_file = stdout;
+    char *input_name = NULL;
+    char *output_name = NULL;
     while ((opt = getopt(argc, argv, "i:o:a")) != -1) {
 	switch (opt) {
 	    case 'i':
-		input_file = optarg;
+		input_name = optarg;
 		args++;
 		iflag = 1;
 		break;
 	    case 'o':
-		output_file = optarg;
+		output_name = optarg;
 		args++;
 		oflag = 1;
 		break;
@@ -53,34 +57,53 @@ int main(int argc, char *argv[])
                 } else {
 		    printf("Неизвестная опция %с", optopt);
 		return 1;
+		}
 	    default:
-		print_error("(default)");
+		printf("(default)");
 		return 1;
 	}
     }
-    if (argc > 1 && (!input_filename || !output_filename)) {
-        print_error("Ошибка: Необходимо указать как i, так и o.");
+    if (input_name != NULL) {
+	input_file = fopen(input_name, "r");
+	if (input_file == NULL) {
+	    printf("errno: %d\n", errno);
+	    perror(input_name);
+	    return 1;
+	}
     }
-    if (input_filename) {
-        input_file = fopen(input_filename, "r");
-        if (input_file == NULL) {
-            print_error("Ошибка открытия in файла.");
-        }
-    } else {
-        input_file = stdin;
-    }
-    if (output_filename) {
-        output_file = fopen(output_filename, "w");
+    if (output_name != NULL) {
+        output_file = fopen(output_name, "w");
         if (output_file == NULL) {
-            print_error("Ошибка открытия out файла.");
+            printf("Ошибка выходной");
+            if (input_file != stdin) {
+    		fclose(input_file);
+	    }
+	    return 1;
         }
-    } else {
-        output_file = stdout;
     }
+    copy_stream(input_file, output_file);
 
+    if (input_file != stdin) fclose(input_file);
+    if (output_file != stdout) fclose(output_file);
+    return 0;
+}
 
-
-
+void copy_stream(FILE *input, FILE *output)
+{
+    char buffer[BUF];
+    size_t bytes_read;
+    while ((bytes_read = fread(buffer, 1, BUF, input)) > 0) {
+        size_t bytes_written = fwrite(buffer, 1, bytes_read, output);
+        if (bytes_written != bytes_read) {
+            fprintf(stderr, "Ошибка записи в файл.\n");
+            exit(1);
+        }
+    }
+    if (ferror(input)) {
+        fprintf(stderr, "Ошибка чтения из файла.\n");
+        exit(1);
+    }
+}
 
 
 
