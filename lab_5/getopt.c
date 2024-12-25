@@ -45,13 +45,7 @@ int main(int argc, char *argv[])
 	}
     }
     if (input_name != NULL) {
-	input_file = fopen(input_name, "r");
-	if (input_file == NULL) {
-	    perror(input_name);
-	    return 1;
-	}
-	read_file(&products, &pos, input_file);
-	fclose(input_file);
+	read_file(&products, &pos, input_name);
     }
     if (output_name != NULL) {
         output_file = fopen(output_name, "w");
@@ -65,15 +59,8 @@ int main(int argc, char *argv[])
     }
     if (input_name == NULL) {
 	int tmp = product_new(&products, &pos);
-	if (tmp == 0) {
-	    product_print(products, pos, output_file);
-    	}
     }
-    /*if (output_name == NULL) {
-	int tmp = copy_stream(input_file, output_file);
-    }
-    */
-    if (input_file != stdin) fclose(input_file);
+    product_print(products, pos, output_file);
     if (output_file != stdout) fclose(output_file);
     return 0;
 }
@@ -172,88 +159,55 @@ void product_print(const struct Product *products, size_t pos, FILE *output)
     }
 }
 
-int read_file(struct Product **products, size_t *pos, FILE *input)
+int read_file(struct Product **products, size_t *pos,const char *name)
 {
-    char buffer[128];
-    if (fgets(buffer, sizeof(buffer), input) == NULL) {
-	return -2;
-    }
-    if (sscanf(buffer, "Products: %d\n", pos) != 1) {
-	return -2;
-    }
-    *products = malloc(sizeof(struct Product) * (*pos));
-    if (*products == NULL) {
+    FILE *file = fopen(name, "r");
+    if (file == NULL) return 1;
+
+    if (fscanf(file, "Products: %zu\n", pos) != 1) {
+	fclose(file);
 	return 1;
     }
-    for (int i = 0; i < (*pos); i++) {
-	if (fscanf(input, "ID: %8s\n", (*products)[i].id) != 1) {
-            free(*products);
-            return -1;
+
+    *products = malloc(sizeof(struct Product) * (*pos));
+	if (*products == NULL) {
+	fclose(file);
+        return 2;
+    }
+
+    int errflag = 0;
+    size_t i;
+    for (i = 0; i < (*pos); i++) {
+
+	if (fscanf(file, "ID: %8s\n", (*products)[i].id) != 1) {
+	    errflag = 1;
+            break;
         }
-	char *name_buffer = NULL;
-	if (fscanf(input, "Name: %[^\n]\n", &name_buffer) != 1) {
-              free(*products);
-            return -1;
+
+	char name_buffer[256];
+        if (fscanf(file, "Name: %255s\n", name_buffer) != 1) {
+	    errflag = 1;
+            break;
         }
-	(*products)[i].name = strdup(name_buffer);
-	if((*products)[i].name == NULL) {
-            free(*products);
-            free(name_buffer);
-            return -2;
+        (*products)[i].name = malloc((strlen(name_buffer) + 1) * sizeof(char));
+        if ((*products)[i].name == NULL) {
+	    errflag = 2;
+            break;
         }
-        free(name_buffer);
-	if (fscanf(input, "Count: %d\n", &(*products)[i].count) != 1) {
-             free((*products)[i].name);
-            free(*products);
-            return -2;
+        strcpy((*products)[i].name, name_buffer);
+
+	if (fscanf(file, "Count: %zu\n", &(*products)[i].count) != 1) {
+	    errflag = 1;
+            break;
         }
     }
+    if (errflag != 0) {
+	for (size_t j = 0; j < i ; j++) free((*products)[j].name);
+	free(*products);
+	fclose(file);
+	return (errflag == 1) ? 1 : 2;
+    }
+    printf("Считано!\n");
+    fclose(file);
     return 0;
-}
-
-
-
-
-char *get_str(FILE *input)
-{
-    char temp[BUF] = {0};
-    char *res = NULL;
-    int len = 0;
-    int n = 0;
-    do {
-	n = fscanf(input, "%1023[^\n]", temp);
-	if (n < 0) {
-	    if (!res) {
-		printf("Обнаружен конец файла\n");
-		return NULL;
-	    }
-	}
-	else if (n > 0) {
-	    int chunk_len = strlen(temp);
-	    int str_len = len + chunk_len;
-	    char *b = realloc(res, str_len + 1);
-	    if (b == NULL) {
-		printf("Произошла ошибка выделения памяти.");
-		return NULL;
-	    }
-	    res = b;
-	    memcpy(res + len, temp, chunk_len);
-	    len = str_len;
-	}
-	else {
-	    scanf("%*c");
-	}
-    } while (n > 0);
-
-    if (len > 0) {
-	res[len] = '\0';
-    }
-    else {
-	res = calloc(1, sizeof(char));
-	if (res == NULL) {
-	    printf("Произошла ошибка выделения памяти.");
-	    return NULL;
-	}
-    }
-    return res;
 }
