@@ -4,25 +4,7 @@
 #include <unistd.h>
 #include <errno.h>
 #include <readline/readline.h>
-
-#define BUF		2048
-#define PROMPT_ID       "Введите ID (8 символов): "
-#define PROMPT_NAME     "Введите название: "
-#define PROMPT_COUNT    "Введите количество: "
-#define PROMPT_EOF      "Обнаружен конец файла.\n"
-#define PROMPT_ERRALLOC "Произошла ошибка выделения памяти!\n"
-#define PROMPT_FILE	"Count of products: "
-
-struct Product {
-    char id[9];
-    char *name;
-    size_t count;
-};
-
-int copy_stream(FILE *input, FILE *output);
-int input_int(size_t *num);
-int product_new(struct Product **products, size_t *pos);
-void product_print(const struct Product *products, size_t pos, FILE *output);
+#include "head.h"
 
 int main(int argc, char *argv[])
 {
@@ -68,6 +50,8 @@ int main(int argc, char *argv[])
 	    perror(input_name);
 	    return 1;
 	}
+	read_file(&products, &pos, input_file);
+	fclose(input_file);
     }
     if (output_name != NULL) {
         output_file = fopen(output_name, "w");
@@ -85,29 +69,12 @@ int main(int argc, char *argv[])
 	    product_print(products, pos, output_file);
     	}
     }
-    if (output_name == NULL) {
+    /*if (output_name == NULL) {
 	int tmp = copy_stream(input_file, output_file);
     }
+    */
     if (input_file != stdin) fclose(input_file);
     if (output_file != stdout) fclose(output_file);
-    return 0;
-}
-
-int copy_stream(FILE *input, FILE *output)
-{
-    char buf[BUF];
-    size_t bytes_read;
-    while ((bytes_read = fread(buf, 1, BUF, input)) > 0) {
-        size_t bytes_written = fwrite(buf, 1, bytes_read, output);
-        if (bytes_written != bytes_read) {
-            printf("Ошибка записи в файл.\n");
-            return 1;
-        }
-    }
-    if (ferror(input)) {
-        printf("Ошибка чтения из файла.\n");
-        return 1;
-    }
     return 0;
 }
 
@@ -174,7 +141,7 @@ int input_int(size_t *num)
     float input;
     do {
         s = scanf("%f", &input);
-        scanf("%*[^\n]");
+        scanf("%[^\n]");
         if (s == EOF) {
             return -1;
         }
@@ -197,20 +164,96 @@ void product_print(const struct Product *products, size_t pos, FILE *output)
         return;
     }
     fprintf(output, PROMPT_FILE);
-    fprintf(output, "%d\n\n", pos);
+    fprintf(output, "%d\n", pos);
     for (size_t i = 0; i < pos; i++) {
-	fprintf(output, "ID: %s\n", products[i].id);
+	fprintf(output, "\nID: %s\n", products[i].id);
 	fprintf(output, "Name: %s\n", products[i].name);
-        fprintf(output, "%d\n\n", products[i].count);
+        fprintf(output, "Count: %d\n", products[i].count);
     }
+}
+
+int read_file(struct Product **products, size_t *pos, FILE *input)
+{
+    char buffer[128];
+    if (fgets(buffer, sizeof(buffer), input) == NULL) {
+	return -2;
+    }
+    if (sscanf(buffer, "Products: %d\n", pos) != 1) {
+	return -2;
+    }
+    *products = malloc(sizeof(struct Product) * (*pos));
+    if (*products == NULL) {
+	return 1;
+    }
+    for (int i = 0; i < (*pos); i++) {
+	if (fscanf(input, "ID: %8s\n", (*products)[i].id) != 1) {
+            free(*products);
+            return -1;
+        }
+	char *name_buffer = NULL;
+	if (fscanf(input, "Name: %[^\n]\n", &name_buffer) != 1) {
+              free(*products);
+            return -1;
+        }
+	(*products)[i].name = strdup(name_buffer);
+	if((*products)[i].name == NULL) {
+            free(*products);
+            free(name_buffer);
+            return -2;
+        }
+        free(name_buffer);
+	if (fscanf(input, "Count: %d\n", &(*products)[i].count) != 1) {
+             free((*products)[i].name);
+            free(*products);
+            return -2;
+        }
+    }
+    return 0;
 }
 
 
 
 
+char *get_str(FILE *input)
+{
+    char temp[BUF] = {0};
+    char *res = NULL;
+    int len = 0;
+    int n = 0;
+    do {
+	n = fscanf(input, "%1023[^\n]", temp);
+	if (n < 0) {
+	    if (!res) {
+		printf("Обнаружен конец файла\n");
+		return NULL;
+	    }
+	}
+	else if (n > 0) {
+	    int chunk_len = strlen(temp);
+	    int str_len = len + chunk_len;
+	    char *b = realloc(res, str_len + 1);
+	    if (b == NULL) {
+		printf("Произошла ошибка выделения памяти.");
+		return NULL;
+	    }
+	    res = b;
+	    memcpy(res + len, temp, chunk_len);
+	    len = str_len;
+	}
+	else {
+	    scanf("%*c");
+	}
+    } while (n > 0);
 
-
-
-
-
-
+    if (len > 0) {
+	res[len] = '\0';
+    }
+    else {
+	res = calloc(1, sizeof(char));
+	if (res == NULL) {
+	    printf("Произошла ошибка выделения памяти.");
+	    return NULL;
+	}
+    }
+    return res;
+}
