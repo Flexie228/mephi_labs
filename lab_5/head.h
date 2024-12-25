@@ -14,5 +14,9 @@ struct Product {
 
 int input_int(size_t *num);
 int product_new(struct Product **products, size_t *pos);
-void product_print(const struct Product *products, size_t pos, FILE *output);
+void product_print(const struct Product *products, size_t pos, const char *name);
+void product_print_bin(const struct Product *products, size_t pos, const char *name);
 int read_file(struct Product **products, size_t *pos, const char *file);
+int read_file_bin(struct Product **products, size_t *pos, const char *file);
+int sort(struct Product **products, size_t *pos);
+int compare_by_count(const void *a, const void *b);

@@ -9,27 +9,30 @@
 int main(int argc, char *argv[])
 {
     int opt;
-    int aflag = 0;
+    int bin_input = 0;
+    int bin_output = 0;
+    int flagsort = 0;
     struct Product *products = NULL;
     size_t pos = 0;
-    int args = 0;
-    FILE *input_file = stdin;
-    FILE *output_file = stdout;
     char *input_name = NULL;
     char *output_name = NULL;
-    while ((opt = getopt(argc, argv, "i:o:a")) != -1) {
+    while ((opt = getopt(argc, argv, "i:o:abs")) != -1) {
 	switch (opt) {
 	    case 'i':
 		input_name = optarg;
-		args++;
 		break;
 	    case 'o':
 		output_name = optarg;
-		args++;
 		break;
 	    case 'a':
-		aflag = 1;
+                bin_input = 1;
+                break;
+	    case 'b':
+		bin_output = 1;
 		break;
+	    case 's':
+                flagsort = 1;
+                break;
 	    case '?':
 		if (optopt == 'i') {
 		    printf("Добавьте аргумент к опции i");
@@ -44,24 +47,23 @@ int main(int argc, char *argv[])
 		return 1;
 	}
     }
-    if (input_name != NULL) {
+    if (input_name != NULL  && bin_input == 0) {
 	read_file(&products, &pos, input_name);
+    } else if (input_name != NULL  && bin_input == 1) {
+	read_file_bin(&products, &pos, input_name);
+    } else {
+	product_new(&products, &pos);
     }
-    if (output_name != NULL) {
-        output_file = fopen(output_name, "w");
-        if (output_file == NULL) {
-            perror(output_name);
-            if (input_file != stdin) {
-    		fclose(input_file);
-	    }
-	    return 1;
-        }
+
+    if (flagsort = 1) {
+	sort(&products, &pos);
     }
-    if (input_name == NULL) {
-	int tmp = product_new(&products, &pos);
+
+    if (bin_output == 0) {
+	product_print(products, pos, output_name);
+    } else {
+	product_print_bin(products, pos, output_name);
     }
-    product_print(products, pos, output_file);
-    if (output_file != stdout) fclose(output_file);
     return 0;
 }
 
@@ -144,19 +146,21 @@ int input_int(size_t *num)
     return 0;
 }
 
-void product_print(const struct Product *products, size_t pos, FILE *output)
+void product_print(const struct Product *products, size_t pos, const char *name)
 {
-    if (products == NULL) {
-        printf("ЗДЕСЬ ПУСТО, невозможно напечатать.\n");
-        return;
+    FILE *file = stdout;
+    if (name != NULL) {
+	file = fopen(name, "w");
+	if (file == NULL) return;
     }
-    fprintf(output, PROMPT_FILE);
-    fprintf(output, "%d\n", pos);
+    fprintf(file, PROMPT_FILE);
+    fprintf(file, "%d\n", pos);
     for (size_t i = 0; i < pos; i++) {
-	fprintf(output, "\nID: %s\n", products[i].id);
-	fprintf(output, "Name: %s\n", products[i].name);
-        fprintf(output, "Count: %d\n", products[i].count);
+	fprintf(file, "\nID: %s\n", products[i].id);
+	fprintf(file, "Name: %s\n", products[i].name);
+        fprintf(file, "Count: %d\n", products[i].count);
     }
+    if (file != stdout) fclose(file);
 }
 
 int read_file(struct Product **products, size_t *pos,const char *name)
@@ -211,3 +215,106 @@ int read_file(struct Product **products, size_t *pos,const char *name)
     fclose(file);
     return 0;
 }
+void product_print_bin(const struct Product *products, size_t pos, const char *name)
+{
+    FILE *file = fopen(name, "wb");
+    if (file == NULL) return;
+    fwrite(&pos, sizeof(pos), 1, file);
+    for (size_t i = 0; i < pos; i++) {
+	fwrite(products[i].id, sizeof(products[i].id), 1, file);		// ID
+	size_t name_len = strlen(products[i].name);				// NAME
+	fwrite(&name_len, sizeof(name_len), 1, file);
+	fwrite(products[i].name, sizeof(char), name_len, file);
+	fwrite(&products[i].count, sizeof(products[i].count), 1, file);	// COUNT
+    }
+    fclose(file);
+    printf("Записано в бинарный файл!\n");
+    return;
+}
+
+int read_file_bin(struct Product **products, size_t *pos, const char *name)
+{
+    FILE *file = fopen(name, "rb");
+    if (file == NULL) return 1;
+    fread(pos, sizeof(*pos), 1, file);
+    *products = malloc(sizeof(struct Product) * (*pos));
+    if (*products == NULL) {
+	fclose(file);
+	return 1;
+    }
+    for (size_t i = 0; i < *pos; i++) {
+	fread((*products)[i].id, sizeof((*products)[i].id), 1, file);
+	size_t name_len;
+	fread(&name_len, sizeof(name_len), 1, file);
+	(*products)[i].name = malloc((name_len + 1) * sizeof(char));
+	fread((*products)[i].name, sizeof(char), name_len, file);
+	(*products)[i].name[name_len] = '\0';
+	fread(&(*products)[i].count, sizeof((*products)[i].count), 1, file);
+    }
+    fclose(file);
+    printf("Считано из бинарного файла!\n");
+    return 0;
+}
+
+int sort(struct Product **products, size_t *pos)
+{
+    size_t type, dir, pole, a;
+    do {
+	a = 0;
+	printf("***Выберите тип сортировки***\n");
+	printf("3 - qsort               \n");
+	size_t s;
+	int flag = input_int(&s);
+    	if (flag == -1) {
+            return -1;
+	}
+	type = s;
+	a = 1;
+    } while (a == 0);
+    do {
+	a = 0;
+        printf("***Выберите направление***\n");
+        printf("1 - по возрастанию\n");
+	printf("2 - по убыванию\n");
+        size_t s;
+        int flag = input_int(&s);
+        if (flag == -1) {
+            return -1;
+        }
+	dir = s;
+	a = 1;
+    } while (a == 0);
+    do {
+	a = 0;
+        printf("***Выберите поле***\n");
+        printf("1 - ID\n");
+        printf("2 - Name\n");
+	printf("3 - Count\n");
+        size_t s;
+        int flag = input_int(&s);
+        if (flag == -1) {
+            return -1;
+        }
+        pole = s;
+	a = 1;
+    } while (a == 0);
+    if (pole == 1) {
+	
+    } else if (pole == 2) {
+	
+    } else {
+	qsort(*products, *pos, sizeof(struct Product), compare_by_count);
+    }
+    return 0;
+}
+int compare_by_count(const void *a, const void *b) {
+    const struct Product *prod_a = (const struct Product *)a;
+    const struct Product *prod_b = (const struct Product *)b;
+    return (prod_a->count - prod_b->count); // Сравниваем по полю count
+}
+
+
+
+
+
+
