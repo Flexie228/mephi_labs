@@ -55,7 +55,7 @@ int main(int argc, char *argv[])
 	product_new(&products, &pos);
     }
 
-    if (flagsort = 1) {
+    if (flagsort == 1) {
 	sort(&products, &pos);
     }
 
@@ -262,6 +262,8 @@ int sort(struct Product **products, size_t *pos)
     do {
 	a = 0;
 	printf("***Выберите тип сортировки***\n");
+	printf("1 - shaker_sort         \n");
+	printf("2 - shell_sort          \n");
 	printf("3 - qsort               \n");
 	size_t s;
 	int flag = input_int(&s);
@@ -298,23 +300,199 @@ int sort(struct Product **products, size_t *pos)
         pole = s;
 	a = 1;
     } while (a == 0);
-    if (pole == 1) {
-	
-    } else if (pole == 2) {
-	
-    } else {
-	qsort(*products, *pos, sizeof(struct Product), compare_by_count);
+    switch(type) {
+	case 1:
+	    switch(pole) {
+		case 1:
+		    if (dir == 1) {
+			shaker_sort(*products, *pos, sizeof(struct Product), comp_char);
+		    } else {
+			shaker_sort(*products, *pos, sizeof(struct Product), comp_char_rev);
+		    }
+		    break;
+		case 2:
+		    if (dir == 1) {
+                        shaker_sort(*products, *pos, sizeof(struct Product), comp_name);
+                    } else {
+                        shaker_sort(*products, *pos, sizeof(struct Product), comp_name_rev);
+                    }
+                    break;
+		case 3:
+                    if (dir == 1) {
+                        shaker_sort(*products, *pos, sizeof(struct Product), comp_count);
+                    } else {
+                        shaker_sort(*products, *pos, sizeof(struct Product), comp_count_rev);
+                    }
+                    break;
+	    }
+	    break;
+	case 2:
+	    switch(pole) {
+		case 1:
+		    if (dir == 1) {
+                        shell_sort(*products, *pos, sizeof(struct Product), comp_char);
+                    } else {
+                        shell_sort(*products, *pos, sizeof(struct Product), comp_char_rev);
+                    }
+                    break;
+                case 2:
+                    if (dir == 1) {
+                        shell_sort(*products, *pos, sizeof(struct Product), comp_name);
+                    } else {
+                        shell_sort(*products, *pos, sizeof(struct Product), comp_name_rev);
+                    }
+                    break;
+                case 3:
+                    if (dir == 1) {
+                        shell_sort(*products, *pos, sizeof(struct Product), comp_count);
+                    } else {
+                        shell_sort(*products, *pos, sizeof(struct Product), comp_count_rev);
+                    }
+                    break;
+	    }
+	    break;
+	case 3:
+            switch(pole) {
+                case 1:
+                    if (dir == 1) {
+                        qsort(*products, *pos, sizeof(struct Product), comp_char);
+                    } else {
+                        qsort(*products, *pos, sizeof(struct Product), comp_char_rev);
+                    }
+                    break;
+                case 2:
+                    if (dir == 1) {
+                        qsort(*products, *pos, sizeof(struct Product), comp_name);
+                    } else {
+                        qsort(*products, *pos, sizeof(struct Product), comp_name_rev);
+                    }
+                    break;
+                case 3:
+                    if (dir == 1) {
+                        qsort(*products, *pos, sizeof(struct Product), comp_count);
+                    } else {
+                        qsort(*products, *pos, sizeof(struct Product), comp_count_rev);
+                    }
+                    break;
+            }
+	    break;
     }
     return 0;
 }
-int compare_by_count(const void *a, const void *b) {
+int comp_count(const void *a, const void *b)
+{
     const struct Product *prod_a = (const struct Product *)a;
     const struct Product *prod_b = (const struct Product *)b;
-    return (prod_a->count - prod_b->count); // Сравниваем по полю count
+    return (prod_a->count - prod_b->count);
 }
 
+int comp_count_rev(const void *a, const void *b)
+{
+    const struct Product *prod_a = (const struct Product *)a;
+    const struct Product *prod_b = (const struct Product *)b;
+    return (prod_b->count - prod_a->count);
+}
 
+int comp_char(const void *a, const void *b)
+{
+    return strcmp(((struct Product *)a)->id, ((struct Product *)b)->id);
+}
 
+int comp_char_rev(const void *a, const void *b)
+{
+    return strcmp(((struct Product *)b)->id, ((struct Product *)a)->id);
+}
 
+int comp_name(const void *a, const void *b)
+{
+    return strcmp(((const struct Product *)a)->name, ((const struct Product *)b)->name);
+}
 
+int comp_name_rev(const void *a, const void *b)
+{
+    return strcmp(((const struct Product *)b)->name, ((const struct Product *)a)->name);
+}
 
+void shaker_sort(void *array, size_t n, size_t size, int (*cmp)(const void *, const void *))
+{
+    int left = 0;
+    int right = n - 1;
+    int lastSwap = 0;
+    int swapflag;
+
+    do {
+        swapflag = 0;
+        for (int i = left; i < right; i++) {		// Слева направо
+            void *a = (char *)array + i * size;
+            void *b = (char *)array + (i + 1) * size;
+            if (cmp(a, b) > 0) {
+                swap(a, b, size);
+                swapflag = 1;
+                lastSwap = i;
+            }
+        }
+        right = lastSwap;
+
+        if (swapflag == 0) {
+            break;
+        }
+
+	swapflag = 0;
+        for (int i = right; i > left; i--) {		// Справа налево
+            void *a = (char *)array + i * size;
+            void *b = (char *)array + (i - 1) * size;
+            if (cmp(a, b) < 0) {
+                swap(a, b, size);
+                swapflag = 1;
+                lastSwap = i;
+            }
+        }
+        left = lastSwap;
+
+    } while (swapflag != 0);
+}
+
+void swap(void *a, void *b, size_t size)
+{
+    void *temp = malloc(size);
+    if (temp == NULL) {
+        return;
+    }
+    memcpy(temp, a, size);
+    memcpy(a, b, size);
+    memcpy(b, temp, size);
+    free(temp);
+}
+
+void shell_sort(void *array, size_t n, size_t size, int (*cmp)(const void *, const void *))
+{
+    int k = 1;
+    while (fib(k - 1) < n) {
+        int d = fib(k);
+
+        for (size_t i = d; i < n; i++) {
+            void *temp = malloc(size);
+            if (temp == NULL) {
+                return;
+            }
+	    void *a = (char *)array + i * size;
+            memcpy(temp, a, size);
+
+	    size_t j;
+            for (j = i; j >= d && cmp((char *)array + (j - d) * size, temp) > 0; j -= d) {
+                swap((char *)array + j * size, (char *)array + (j - d) * size, size);
+            }
+	    void *b = (char *)array + j * size;
+            memcpy(b, temp, size);
+            free(temp);
+        }
+	k++;
+    }
+}
+
+int fib(int k)
+{
+    if (k == 0) return 0;
+    if (k == 1) return 1;
+    return fib(k - 1) + fib(k - 2);
+}
