@@ -1,0 +1,33 @@
+Products: 8
+
+ID: ffff6666
+Name: b
+Count: 6
+
+ID: cccc3333
+Name: d
+Count: 25
+
+ID: hhhh8888
+Name: c
+Count: 10
+
+ID: gggg7777
+Name: a
+Count: 88
+
+ID: dddd4444
+Name: g
+Count: 1
+
+ID: bbbb2222
+Name: h
+Count: 9919264
+
+ID: eeee5555
+Name: f
+Count: 2200
+
+ID: aaaa1111
+Name: e
+Count: 100
