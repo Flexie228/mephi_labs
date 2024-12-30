@@ -26,6 +26,40 @@ int initList(Node **head, Node **tail)
         return 0;
 }
 
+void spaceDelete(Node **head)
+{
+	Node *currentNode = *head;
+	Node *prevNode = NULL;
+	while (currentNode != NULL && (currentNode->data == ' ' || currentNode->data == '\t')) {
+		Node *delNode = currentNode;
+		currentNode = currentNode->next;
+		free(delNode);
+	}
+	*head = currentNode;
+
+	while (currentNode != NULL) {
+		if (currentNode->data == ' ' || currentNode->data == '\t') {
+			if (prevNode != NULL && (prevNode->data == ' ' || prevNode->data == '\t')) {
+				Node *delNode = currentNode;
+				currentNode = currentNode->next;
+				prevNode->next = currentNode;
+				free(delNode);
+			} else {
+				prevNode = currentNode;
+				currentNode = currentNode->next;
+			}
+		} else {
+			prevNode = currentNode;
+			currentNode = currentNode->next;
+		}
+	}
+
+	if (prevNode != NULL && (prevNode->data == ' ' || prevNode->data == '\t')) {
+		prevNode->next = NULL;
+		free(prevNode);
+	}
+}
+
 int modeList(Node **head)
 {
         printf("Введите число, на слова не длиннее которого надо разбить существующие в строке слова: ");
@@ -35,10 +69,10 @@ int modeList(Node **head)
         size_t count = 0;
         Node *currentNode = *head;
         while (currentNode != NULL) {
-                if (currentNode->data != ' ') {
+                if (currentNode->data != ' '  && currentNode->data != '\t') {
                         count++;
                         if (count == n) {
-                                if (currentNode->next != NULL && currentNode->next->data != ' ') {
+                                if ((currentNode->next != NULL && currentNode->next->data != ' ') && (currentNode->next != NULL && currentNode->next->data != '\t')) {
                                         Node *newNode = malloc(sizeof(Node));
                                         if (newNode == NULL) return 1;
                                         newNode->data = ' ';
@@ -61,7 +95,7 @@ int input_int(size_t *num)
     float input;
     do {
     	s = scanf("%f", &input);
-    	scanf("%[^\n]");
+    	scanf("%*[^\n]");
         if (s == EOF) {
             return -1;
         }

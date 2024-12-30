@@ -3,26 +3,28 @@
 
 int main()
 {
+	int status;
 	Node *head = NULL;
 	Node *tail = NULL;
 
-	int status = initList(&head, &tail);
-	printList(head);
-	if (status == 0) {
-		status = modeList(&head);
+	status = initList(&head, &tail);
+	while (status == 0) {
 		printList(head);
-	}
-	freeList(head);
-
-	switch(status) {
-		case 1:
-			printf("Произошла ошибка выделения памяти.\n");
+		spaceDelete(&head);
+		status = modeList(&head);
+		if (status == 0) {
+			printList(head);
 			freeList(head);
-			break;
-		case -1:
-			printf("Обнаружен конец файла.\n");
-		default:
-			break;
+			head = NULL;
+			tail = NULL;
+			status = initList(&head, &tail);
+		}
+	}
+	if (status == -1) {
+		printf("Обнаружен конец файла.\n");
+	} else {
+		printf("Произошла ошибка выделения памяти.\n");
+		return 1;
 	}
 	return 0;
 }
