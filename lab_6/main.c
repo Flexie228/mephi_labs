@@ -8,8 +8,10 @@ int main()
 
 	int status = initList(&head, &tail);
 	printList(head);
-	if (status == 0) status = modeList(&head);
-	printList(head);
+	if (status == 0) {
+		status = modeList(&head);
+		printList(head);
+	}
 	freeList(head);
 
 	switch(status) {
