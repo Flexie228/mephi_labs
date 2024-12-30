@@ -60,18 +60,18 @@ int input_int(size_t *num)
     int s = 0;
     float input;
     do {
-        s = scanf("%f", &input);
-        scanf("%[^\n]");
+    	s = scanf("%f", &input);
+    	scanf("%[^\n]");
         if (s == EOF) {
             return -1;
         }
-        else if (s == 0) {
+        else if (input == 0.0) {
             printf("Ошибка ввода. Введите натурально число.\n");
             s = 0;
         } else if (input != (float)((size_t)input)) {
-                printf("Ошибка ввода. Введите натурально число.\n");
-                s = 0;
-                }
+            printf("Ошибка ввода. Введите натурально число.\n");
+            s = 0;
+        }
     } while (s == 0);
     *num = input;
     return 0;
