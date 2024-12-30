@@ -1,3 +1,6 @@
+#ifndef KAF_12
+#define KAF_12
+
 #define BUF             1024
 #define PROMPT_ID       "Введите ID (8 символов): "
 #define PROMPT_NAME     "Введите название: "
@@ -29,3 +32,5 @@ int shell_sort(void *array, size_t n, size_t size, int (*cmp)(const void *, cons
 int fib(int k);
 int comp_name(const void *a, const void *b);
 int comp_name_rev(const void *a, const void *b);
+
+#endif

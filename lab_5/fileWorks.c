@@ -12,12 +12,8 @@ int product_new(struct Product **products, size_t *pos)
     do {
 	printf("Введите количество экземпляров структур: ");
 	flag = input_int(&cnt_strct);
-	if (flag == 1) return -1;
-	if (cnt_strct == 0 && flag == 1) {
-	    printf("Введите натуральное число\n");
-	    flag = 0;
-	}
-    } while(flag != 1);
+	if (flag == -1) return -1;
+    } while(flag != 0);
     struct Product *b = realloc(*products, ((*pos) + cnt_strct) * sizeof(struct Product));
     if (b == NULL) {
         return 1;
@@ -142,8 +138,9 @@ int input_int(size_t *num)
         if (s == EOF) {
             return -1;
         }
-        else if (s == 0) {
+        else if (input == 0.0) {
             printf("Ошибка ввода. Введите натурально число.\n");
+	    s = 0;
         }
 	else if (input != (float)((size_t)input)) {
 	    printf("Ошибка ввода. Введите натурально число.\n");

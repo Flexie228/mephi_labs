@@ -18,7 +18,7 @@ int sort(struct Product **products, size_t *pos)
     	if (flag == -1) return -1;
 	type = s;
 	a = 1;
-	if (type == 0 || type > 3) a = 0;
+	if (type > 3) a = 0;
     } while (a == 0);
     do {
 	a = 0;
@@ -30,7 +30,7 @@ int sort(struct Product **products, size_t *pos)
         if (flag == -1) return -1;
 	dir = s;
 	a = 1;
-	if (dir == 0 || type > 2) a = 0;
+	if (type > 2) a = 0;
     } while (a == 0);
     do {
 	a = 0;
@@ -43,7 +43,7 @@ int sort(struct Product **products, size_t *pos)
 	if (flag == -1) return -1;
         pole = s;
         a = 1;
-        if (pole == 0 || type > 3) a = 0;
+        if (type > 3) a = 0;
     } while (a == 0);
     switch(type) {
 	int status;
