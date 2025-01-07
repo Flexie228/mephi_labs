@@ -37,27 +37,24 @@ void spaceDelete(Node **head)
 	}
 	*head = currentNode;
 
-	while (currentNode != NULL) {
-		if (currentNode->data == ' ' || currentNode->data == '\t') {
-			if (prevNode != NULL && (prevNode->data == ' ' || prevNode->data == '\t')) {
-				Node *delNode = currentNode;
-				currentNode = currentNode->next;
-				prevNode->next = currentNode;
-				free(delNode);
-			} else {
-				prevNode = currentNode;
-				currentNode = currentNode->next;
-			}
-		} else {
-			prevNode = currentNode;
-			currentNode = currentNode->next;
-		}
-	}
+    while (currentNode != NULL) {
+        if (currentNode->data == ' ' || currentNode->data == '\t') {
+            Node *delNode = currentNode;
+            currentNode = currentNode->next;
+            if(prevNode != NULL){
+                 prevNode->next = currentNode;
+            }
+            free(delNode);
 
-	if (prevNode != NULL && (prevNode->data == ' ' || prevNode->data == '\t')) {
-		prevNode->next = NULL;
-		free(prevNode);
-	}
+        } else {
+            prevNode = currentNode;
+            currentNode = currentNode->next;
+        }
+    }
+    if (prevNode != NULL && (prevNode->data == ' ' || prevNode->data == '\t')) {
+         prevNode->next = NULL;
+         free(prevNode);
+    }
 }
 
 int modeList(Node **head)
