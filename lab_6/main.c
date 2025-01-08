@@ -19,6 +19,8 @@ int main()
 			tail = NULL;
 			getchar();
 			status = initList(&head, &tail);
+		} else {
+			freeList(head);
 		}
 	}
 	if (status == -1) {

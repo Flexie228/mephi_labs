@@ -28,32 +28,43 @@ int initList(Node **head, Node **tail)
 
 void spaceDelete(Node **head)
 {
-	Node *currentNode = *head;
-	Node *prevNode = NULL;
-	while (currentNode != NULL && (currentNode->data == ' ' || currentNode->data == '\t')) {
-		Node *delNode = currentNode;
-		currentNode = currentNode->next;
-		free(delNode);
-	}
-	*head = currentNode;
+    Node *currentNode = *head;
+    Node *prevNode = NULL;
+    while (currentNode != NULL && (currentNode->data == ' ' || currentNode->data == '\t')) {
+        Node *delNode = currentNode;
+        currentNode = currentNode->next;
+        free(delNode);
+    }
+    *head = currentNode;
 
+    if(currentNode != NULL){
+        prevNode = currentNode;
+        currentNode = currentNode->next;
+    }
     while (currentNode != NULL) {
         if (currentNode->data == ' ' || currentNode->data == '\t') {
-            Node *delNode = currentNode;
-            currentNode = currentNode->next;
-            if(prevNode != NULL){
-                 prevNode->next = currentNode;
+            if (prevNode != NULL && (prevNode->data == ' ' || prevNode->data == '\t')) {
+                Node* delNode = currentNode;
+                currentNode = currentNode->next;
+                prevNode->next = currentNode;
+                free(delNode);
+            } else {
+                prevNode = currentNode;
+                currentNode = currentNode->next;
             }
-            free(delNode);
-
         } else {
             prevNode = currentNode;
             currentNode = currentNode->next;
         }
     }
     if (prevNode != NULL && (prevNode->data == ' ' || prevNode->data == '\t')) {
-         prevNode->next = NULL;
-         free(prevNode);
+        Node* delNode = prevNode;
+            currentNode = *head;
+            while (currentNode->next != prevNode) {
+                currentNode = currentNode->next;
+            }
+            currentNode->next = NULL;
+        free(delNode);
     }
 }
 
