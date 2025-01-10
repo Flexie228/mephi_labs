@@ -8,7 +8,7 @@ typedef struct Node {
 
 int input_int(size_t *num);
 int initList(Node **head, Node **tail);
-int modeList(Node **head);
+int modeList(Node **head, size_t n);
 void spaceDelete(Node **head);
 void printList(Node *head);
 void freeList(Node *head);

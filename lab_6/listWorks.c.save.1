@@ -6,7 +6,7 @@ int initList(Node **head, Node **tail)
 {
         printf("Введите строку: ");
         char symbol;
-        while ((symbol = getchar()) != '\n') {
+        while ((symbol = getchar()) != EOF) {
                 if (symbol == EOF) return -1;
                 Node *newNode = malloc(sizeof(Node));
                 if (newNode == NULL) {
@@ -30,6 +30,7 @@ void spaceDelete(Node **head)
 {
     Node *currentNode = *head;
     Node *prevNode = NULL;
+
     while (currentNode != NULL && (currentNode->data == ' ' || currentNode->data == '\t')) {
         Node *delNode = currentNode;
         currentNode = currentNode->next;
@@ -42,7 +43,16 @@ void spaceDelete(Node **head)
         currentNode = currentNode->next;
     }
     while (currentNode != NULL) {
-        if (currentNode->data == ' ' || currentNode->data == '\t') {
+	if (currentNode->data == '\n') {
+	    currentNode = currentNode;
+	    prevNode = NULL;
+
+	    while (currnetNode != NULL && (currentNode->data == ' ' || currentNode->data == '\t')) {
+		Node *delNode = currentNode;
+        	currentNode = currentNode->next;
+        	free(delNode);
+    	    }
+	} else if (currentNode->data == ' ' || currentNode->data == '\t') {
             if (prevNode != NULL && (prevNode->data == ' ' || prevNode->data == '\t')) {
                 Node* delNode = currentNode;
                 currentNode = currentNode->next;
@@ -68,8 +78,12 @@ void spaceDelete(Node **head)
     }
 }
 
-int modeList(Node **head, size_t n)
+int modeList(Node **head)
 {
+        printf("Введите число, на слова не длиннее которого надо разбить существующие в строке слова: ");
+        size_t n;
+        input_int(&n);
+
         size_t count = 0;
         Node *currentNode = *head;
         while (currentNode != NULL) {
@@ -112,7 +126,6 @@ int input_int(size_t *num)
         }
     } while (s == 0);
     *num = input;
-    getchar();
     return 0;
 }
 
