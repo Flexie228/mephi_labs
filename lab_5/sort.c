@@ -8,43 +8,46 @@ int sort(struct Product **products, size_t *pos)
 {
     size_t type, dir, pole, a;
     do {
-	a = 0;
-	printf("***Выберите тип сортировки***\n");
-	printf("1 - shaker_sort         \n");
-	printf("2 - shell_sort          \n");
-	printf("3 - qsort               \n");
-	size_t s;
-	int flag = input_int(&s);
+		a = 0;
+		printf("***Выберите тип сортировки***\n");
+		printf("1 - shaker_sort         \n");
+		printf("2 - shell_sort          \n");
+		printf("3 - qsort               \n");
+		size_t s;
+		int flag = input_int(&s);
     	if (flag == -1) return -1;
-	type = s;
-	a = 1;
-	if (type > 3) a = 0;
+		type = s;
+		a = 1;
+		if (type > 3) a = 0;
     } while (a == 0);
+
     do {
-	a = 0;
-        printf("***Выберите направление***\n");
-        printf("1 - по возрастанию\n");
-	printf("2 - по убыванию\n");
+		a = 0;
+    	printf("***Выберите направление***\n");
+    	printf("1 - по возрастанию\n");
+		printf("2 - по убыванию\n");
         size_t s;
         int flag = input_int(&s);
         if (flag == -1) return -1;
-	dir = s;
-	a = 1;
-	if (type > 2) a = 0;
+		dir = s;
+		a = 1;
+		if (s > 2 || s == 0) a = 0;
     } while (a == 0);
+
     do {
-	a = 0;
+		a = 0;
         printf("***Выберите поле***\n");
         printf("1 - ID\n");
         printf("2 - Name\n");
-	printf("3 - Count\n");
+		printf("3 - Count\n");
         size_t s;
         int flag = input_int(&s);
-	if (flag == -1) return -1;
+		if (flag == -1) return -1;
         pole = s;
         a = 1;
         if (type > 3) a = 0;
     } while (a == 0);
+
     switch(type) {
 	int status;
 	case 1:
@@ -174,10 +177,10 @@ int shaker_sort(void *array, size_t n, size_t size, int (*cmp)(const void *, con
 int shell_sort(void *array, size_t n, size_t size, int (*cmp)(const void *, const void *))
 {
     int k = 1;
-    while (fib(k - 1) < n) {
+    while (fib(k - 1) < (int)n) {
         int d = fib(k);
 
-        for (size_t i = d; i < n; i++) {
+        for (int i = d; i < (int)n; i++) {
             void *temp = malloc(size);
             if (temp == NULL) {
                 return 1;
@@ -185,7 +188,7 @@ int shell_sort(void *array, size_t n, size_t size, int (*cmp)(const void *, cons
 	    void *a = (char *)array + i * size;
             memcpy(temp, a, size);
 
-	    size_t j;
+	    int j;
 	    int status;
             for (j = i; j >= d && cmp((char *)array + (j - d) * size, temp) > 0; j -= d) {
                 status = swap((char *)array + j * size, (char *)array + (j - d) * size, size);
