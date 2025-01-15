@@ -16,10 +16,12 @@ struct Product {
 };
 
 int input_int(size_t *num);
+int product_print(const struct Product *products, size_t pos, const char *name);
+int product_print_bin(const struct Product *products, size_t pos, const char *name);
 int products_generate(struct Product **products, size_t *pos);
 char generate();
 int generateCount();
-int sort(struct Product **products, size_t *pos);
+int sort(struct Product **products, size_t *pos, double *time);
 int comp_count(const void *a, const void *b);
 int comp_count_rev(const void *a, const void *b);
 int comp_char(const void *a, const void *b);

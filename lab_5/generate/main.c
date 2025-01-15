@@ -12,7 +12,7 @@ int main(int argc, char *argv[])
     int status = 0;
     int bin_output = 0;
     int sortflag = 0;
-    srand(time(NULL));
+    double time = 0.0;
 
     int opt;
     while ((opt = getopt(argc, argv, "o:bs")) != -1) {
@@ -43,7 +43,7 @@ int main(int argc, char *argv[])
     status = products_generate(&products, &pos);
 
     if (sortflag == 1 && status == 0) {
-	sort(&products, &pos);
+	sort(&products, &pos, &time);
     }
 
     if (bin_output == 0 && status == 0) {
@@ -51,6 +51,7 @@ int main(int argc, char *argv[])
     } else if (status == 0) {
 	product_print_bin(products, pos, output_name);
     }
+    printf("Время выполнения: %f секунд\n", time);
 
     switch(status) {
 	case 0:
