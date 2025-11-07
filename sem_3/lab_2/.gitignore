@@ -9,3 +9,4 @@ tests
 Makefile
 build.ninja
 cmake_install.cmake
+.idea/
