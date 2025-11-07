@@ -1,0 +1,11 @@
+cmake-build-debug/
+build/
+*.cbp
+CMakeFiles/
+Testing/
+CMakeCache.txt
+lab_2
+tests
+Makefile
+build.ninja
+cmake_install.cmake
