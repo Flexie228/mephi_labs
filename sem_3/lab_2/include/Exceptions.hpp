@@ -17,6 +17,7 @@ enum ErrorCode {
     SEQUENCE_EMPTY = 4,
     CAPACITY_MAXED = 5,
 
+    ELEMENT_NOT_FOUND = 6,
     ERRORS_COUNT
 };
 
@@ -26,7 +27,8 @@ const std::array<Error, ERRORS_COUNT> Errors = {{
     {INVALID_ARGUMENT, "Error: Invalid argument."},
     {MEMORY_ALLOCATION_FAILED, "Error: Memory allocation failed."},
     {SEQUENCE_EMPTY, "Error: Sequence is empty."},
-    {CAPACITY_MAXED, "Error: Cannot update capacity because maximum is reached."}
+    {CAPACITY_MAXED, "Error: Cannot update capacity because maximum is reached."},
+    {ELEMENT_NOT_FOUND, "Error: Element not found."}
 }};
 
 inline void throwError(const ErrorCode code) {
