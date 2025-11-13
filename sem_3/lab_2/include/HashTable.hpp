@@ -108,6 +108,14 @@ public:
         Value& result = items[index].front().second;
         return result;
     }
+    void clear() {
+        std::vector<std::pair<Key, Value>> newItems;
+        capacityIndex = 0;
+        capacity = capacities[capacityIndex];
+        newItems[capacity];
+        items = newItems;
+        size = 0;
+    }
 
 private:
     size_t getItemIndex(const Key& key) const {
