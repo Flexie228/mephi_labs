@@ -186,6 +186,23 @@ private:
         return nullptr;
     }
 
+    void rangedSearch(const unique_ptr<Node>& node, const Key& minKey, const Key& maxKey, vector<Value>& result) const {
+        if (!node) return;
+
+        if (node->key > minKey) {
+            rangedSearch(node->left, minKey, maxKey, result);
+        }
+
+        if (node->key >= minKey && node->key <= maxKey) {
+            for (const auto& value : node->values)
+                result.push_back(value);
+        }
+
+        if (node->key < maxKey) {
+            rangedSearch(node->right, minKey, maxKey, result);
+        }
+    }
+
     void preOrderTraversal(const unique_ptr<Node>& node, vector<pair<Key, list<Value>>>& result) const {
         if (!node) return;
         result.push_back({node->key, node->values});
@@ -240,6 +257,21 @@ public:
         Node* node = findNode(key);
         if (node == nullptr) return nullptr;
         return &(node->values);
+    }
+
+    vector<Value> rangedSearch(const Key& minKey, const Key& maxKey) const {
+        vector<Value> result;
+        if (minKey > maxKey) return result;
+        if (minKey == maxKey) {
+            auto found = find(minKey);
+            if (!found) return result;
+            for (const auto& value : *found) {
+                result.push_back(value);
+            }
+            return result;
+        }
+        rangedSearch(root, minKey, maxKey, result);
+        return result;
     }
 
     // Прямой обход (pre-order): корень -> левое поддерево -> правое поддерево

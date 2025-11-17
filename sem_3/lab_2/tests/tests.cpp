@@ -282,6 +282,37 @@ TEST_CASE("AVLTree functionality tests") {
 
         REQUIRE(tree.find(999) == nullptr); // Non-existent key
     }
+    SECTION("Ranged Search") {
+        vector<pair<int, string>> dataBase;
+        dataBase.reserve(100000);
+        for (int i = 0; i < 100000; i++) dataBase.emplace_back(i, "value"+to_string(i));
+        AVLTree newTree(dataBase);
+
+        int a = 40000, b = 60000;
+        const vector<string> result = newTree.rangedSearch(a, b);
+        REQUIRE(result.size() == 20001);
+        REQUIRE(result[0] == "value40000");
+        REQUIRE(result[result.size()-1] == "value60000");
+
+        // Проверка, что все значения в правильном порядке
+        for (int i = 0; i < result.size(); i++) {
+            REQUIRE(result[i] == "value" + to_string(a + i));
+
+        }
+    }
+    SECTION("Ranged Search with multiple values per key") {
+
+        for (int i = 40000; i <= 60000; i++) {
+            tree.insert(i, "valueA_" + to_string(i));
+            tree.insert(i, "valueB_" + to_string(i));
+            tree.insert(i, "valueC_" + to_string(i));
+        }
+
+        const vector<string> result = tree.rangedSearch(40000, 60000);
+
+        // Теперь размер: 20001 ключ × 3 значения = 60003
+        REQUIRE(result.size() == 60003);
+    }
     SECTION("Remove One") {
         tree.insert(10, "value10");
         tree.insert(10, "value10_second");
