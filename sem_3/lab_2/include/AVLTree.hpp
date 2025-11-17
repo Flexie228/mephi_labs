@@ -6,7 +6,6 @@
 #include <list>
 #include <memory>
 #include <algorithm>
-#include "Exceptions.hpp"
 using namespace std;
 
 template<typename Key, typename Value>
@@ -224,15 +223,11 @@ public:
     }
 
     void removeAll(const Key& key) {
-        const size_t prevTreeSize = treeSize;
         root = removeAll(move(root), key);
-        if (prevTreeSize == treeSize) throwError(ELEMENT_NOT_FOUND);
     }
 
     void removeOne(const Key& key, const Value& value) {
-        const size_t prevValuesCount = valuesCount;
         root = removeOne(move(root), key, value);
-        if (prevValuesCount == valuesCount) throwError(ELEMENT_NOT_FOUND);
     }
 
     const list<Value>* find(const Key& key) const {
@@ -241,10 +236,10 @@ public:
         return &(node->values);
     }
 
-    const list<Value>& operator[](const Key& key) const {
+    const list<Value>* operator[](const Key& key) const {
         Node* node = findNode(key);
-        if (node == nullptr) throwError(ELEMENT_NOT_FOUND);
-        return node->values;
+        if (node == nullptr) return nullptr;
+        return &(node->values);
     }
 
     // Прямой обход (pre-order): корень -> левое поддерево -> правое поддерево

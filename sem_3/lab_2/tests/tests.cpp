@@ -348,8 +348,8 @@ TEST_CASE("AVLTree functionality tests") {
 
         REQUIRE(tree.getTreeSize() == 2);
         REQUIRE(tree.getValuesCount() == 3);
-        REQUIRE(tree[10].size() == 2);
-        REQUIRE(tree[20].size() == 1);
+        REQUIRE(tree[10]->size() == 2);
+        REQUIRE(tree[20]->size() == 1);
     }
     SECTION("Tree traversals") {
         // Build balanced tree for consistent traversal order
