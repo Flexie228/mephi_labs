@@ -9,7 +9,8 @@ add_executable(lab_2 src/main.cpp
         include/Hasher.hpp
         include/AVLTree.hpp
         include/IDictionary.hpp
-        include/Cache.hpp)
+        include/Cache.hpp
+        include/Student.hpp)
 
 add_executable(tests tests/tests.cpp)
 target_link_libraries(tests PRIVATE Catch2::Catch2WithMain)
