@@ -109,11 +109,10 @@ public:
         return result;
     }
     void clear() {
-        std::vector<std::pair<Key, Value>> newItems;
+        std::vector<std::list<std::pair<Key, Value>>> newItems(capacity);
         capacityIndex = 0;
         capacity = capacities[capacityIndex];
-        newItems[capacity];
-        items = newItems;
+        items = std::move(newItems);
         size = 0;
     }
 
