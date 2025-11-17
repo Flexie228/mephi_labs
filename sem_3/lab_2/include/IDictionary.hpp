@@ -3,7 +3,6 @@
 
 #include "HashTable.hpp"
 #include "AVLTree.hpp"
-#include "Exceptions.hpp"
 using namespace std;
 
 template<typename Key, typename Value>
@@ -11,14 +10,12 @@ class IDictionary {
 public:
     virtual ~IDictionary() = default;
 
-    virtual Value Get(const Key& key) const = 0;
-    [[nodiscard]] virtual bool ContainsKey(const Key& key) const = 0;
+    virtual bool ContainsKey(const Key& key) const = 0;
     virtual void Add(const Key& key, const Value& value) = 0;
     virtual void Remove(const Key& key) = 0;
     virtual void Clear() = 0;
 
     [[nodiscard]] virtual size_t GetCount() const = 0;
-    [[nodiscard]] virtual size_t GetCapacity() const = 0;
     [[nodiscard]] virtual bool IsEmpty() const = 0;
 };
 
@@ -32,21 +29,40 @@ public:
     explicit IDictionaryHT(const vector<pair<Key, Value>> dataBase) : hashTable(dataBase) {}
     ~IDictionaryHT() override = default;
 
-    Value Get(const Key& key) const override {
-        Value* v = hashTable.find(key);
-        if (v == nullptr) throwError(ELEMENT_NOT_FOUND);
-        return *v;
-    }
-    bool ContainsKey(const Key& key) const override { return hashTable.find(key); }
+    Value* Get(const Key& key) const { return hashTable.find(key); }
+    bool ContainsKey(const Key& key) const override { return hashTable.find(key) != nullptr; }
     void Add(const Key& key, const Value& value) override { hashTable.insert(key, value); }
     void Remove(const Key& key) override { hashTable.erase(key); }
     void Clear() override { hashTable.clear(); }
 
-    size_t GetCount() const override { return hashTable.getSize(); }
-    size_t GetCapacity() const override { return hashTable.getCapacity(); }
-    bool IsEmpty() const override { return hashTable.isEmpty(); }
+    [[nodiscard]] size_t GetCount() const override { return hashTable.getSize(); }
+    [[nodiscard]] size_t GetCapacity() const { return hashTable.getCapacity(); }
+    [[nodiscard]] bool IsEmpty() const override { return hashTable.isEmpty(); }
 };
 
+template<typename Key, typename Value>
+class IDictionaryAVL final : public IDictionary<Key, Value> {
+private:
+    AVLTree<Key, Value> searchTree;
 
+public:
+    IDictionaryAVL() : searchTree() {}
+    explicit IDictionaryAVL(const vector<pair<Key, Value>> dataBase) : searchTree(dataBase) {}
+    ~IDictionaryAVL() override = default;
+
+    const list<Value>* Get(const Key& key) const { return searchTree.find(key); }
+    vector<Value> GetRange(const Key& minKey, const Key& maxKey) const { return searchTree.rangedSearch(minKey, maxKey); }
+    bool ContainsKey(const Key& key) const override {return searchTree.find(key) != nullptr; }
+    void Add(const Key& key, const Value& value) override { searchTree.insert(key, value); }
+    void Remove(const Key& key) override { searchTree.removeAll(key); }
+    void RemoveOne(const Key& key, const Value& value) { searchTree.removeOne(key, value); }
+    void Clear() override { searchTree.clear(); }
+
+
+    [[nodiscard]] size_t GetCount() const override { return searchTree.getValuesCount(); }
+    [[nodiscard]] size_t GetUniqueKeysCount() const { return searchTree.getTreeSize(); }
+    [[nodiscard]] size_t GetKeyDuplicatesCount(const Key& key) const { return searchTree.getListSizeByKey(key); }
+    [[nodiscard]] bool IsEmpty() const override { return searchTree.isEmpty(); }
+};
 
 #endif
