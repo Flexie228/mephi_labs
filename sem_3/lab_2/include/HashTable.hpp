@@ -6,10 +6,24 @@
 #include <utility>
 #include "Exceptions.hpp"
 #include "Hasher.hpp"
+using namespace std;
 
 template<typename Key, typename Value>
 class HashTable {
 private:
+    struct Pair {
+        Key first;
+        Value second;
+        size_t release{0};
+
+        Pair() = default;
+        Pair(const Key& k, const Value& v, const size_t r = 0) : first(k), second(v), release(r) {}
+        Pair(const Pair&) = default;
+        Pair(Pair&&) = default;
+        Pair& operator= (const Pair&) = default;
+        Pair& operator= (Pair&&) = default;
+        ~Pair() = default;
+    };
     static constexpr float LoadFactor{0.75f};
     static constexpr size_t capacities[] = {53, 97, 193, 389, 769, 1543, 3079, 6151,                                    // Массив простых чисел, с "удвоением" размера
                                             12289, 24593, 49157, 98317, 196613, 393241,
@@ -19,17 +33,19 @@ private:
     size_t capacityIndex{0};
     size_t size{0};
     size_t capacity{capacities[capacityIndex]};
-    std::vector<std::list<std::pair<Key, Value>>> items;
+    vector<list<Pair>> items;
 
 public:
     HashTable() : items(capacity) {}
     HashTable(const HashTable& other) : capacityIndex(other.capacityIndex), size(other.size), capacity(other.capacity), items(other.items) {}
-    explicit HashTable(const std::vector<std::pair<Key, Value>> dataBase) {
-        size = dataBase.size();
+    explicit HashTable(const std::vector<std::pair<Key, Value>>& dataBase) {
+        size = 0;
         constexpr size_t capacitiesSize = std::size(capacities);
         capacityIndex = 0;
+
         for (; capacityIndex < capacitiesSize; capacityIndex++) {
-            if (static_cast<float>(size) < static_cast<float>(capacities[capacityIndex]) * LoadFactor) break;
+            if (static_cast<float>(size) < static_cast<float>(capacities[capacityIndex]) * LoadFactor)
+                break;
         }
         if (capacityIndex >= capacitiesSize) throwError(CAPACITY_MAXED);
 
@@ -37,9 +53,8 @@ public:
         items.resize(capacity);
 
         Hasher<Key> hasher;
-        for (size_t i = 0; i < size; i++) {
-            size_t index = hasher(dataBase[i].first) % capacity;
-            items[index].push_back(dataBase[i]);
+        for (const auto& pair : dataBase) {
+            insert(pair.first, pair.second);
         }
     }
     HashTable& operator=(const HashTable& other) {
@@ -59,23 +74,28 @@ public:
     [[nodiscard]] static float getLoadFactor() { return LoadFactor; }
     [[nodiscard]] bool isEmpty() const { return (size == 0); }
 
-    const Value* find(const Key& key) const {
+    vector<Value> find(const Key& key) const {
+        vector<Value> result;
         size_t index = getItemIndex(key);
         for (const auto& pair : items[index]) {
-            if (pair.first == key) return &(pair.second);
+            if (pair.first == key) {
+                result.push_back(pair.second);
+                if (pair.release == 0) break;
+            }
         }
-        return nullptr;
+        return result;
     }
     void insert(const Key& key, const Value& value) {
         size_t index = getItemIndex(key);
+        size_t rel;
 
         for (auto& pair : items[index]) {
             if (pair.first == key) {
-                pair.second = value;
-                return;
+                rel = pair.release + 1;
+                break;
             }
         }
-        items[index].push_front({key, value});
+        items[index].push_front({key, value, rel});
         size++;
         rehash();
     }
@@ -83,33 +103,33 @@ public:
         size_t index = getItemIndex(key);
         auto& list = items[index];
 
-        for (auto it = list.begin(); it != list.end(); ++it) {
+        for (auto it = list.begin(); it != list.end(); ) {
             if (it->first == key) {
-                list.erase(it);
+                const bool isLast = (it->release == 0);
+                it = list.erase(it);
                 size--;
-                return;
-            }
+                if (isLast) break;
+            } else { ++it; }
         }
     }
-    Value& operator[](const Key& key) {
+    void erase(const Key& key, const Value& value) {
         size_t index = getItemIndex(key);
-        const size_t currentCapacity = capacity;
-        for (auto& pair : items[index]) {
-            if (pair.first == key) return pair.second;
-        }
-        items[index].push_front({key, Value{}});
-        rehash();
-        size++;
+        auto& list = items[index];
 
-        if (static_cast<float>(size) / static_cast<float>(currentCapacity) >= LoadFactor) {                             //Если произойдет рехеширование, то обновляем индекс
-            const size_t newIndex = getItemIndex(key);
-            index = newIndex;
+        for (auto it = list.begin(); it != list.end(); ) {
+            if (it->first == key && it->second == value) {
+                const bool lastRelease = (it->release == 0);
+                it = list.erase(it);
+                size--;
+                if (lastRelease) return;
+            } else { ++it; }
         }
-        Value& result = items[index].front().second;
-        return result;
+    }
+    vector<Value> operator[](const Key& key) {
+        return find(key);
     }
     void clear() {
-        std::vector<std::list<std::pair<Key, Value>>> newItems(capacity);
+        vector<list<Pair>> newItems(capacity);
         capacityIndex = 0;
         capacity = capacities[capacityIndex];
         items = std::move(newItems);
@@ -133,11 +153,12 @@ private:
             throwError(CAPACITY_MAXED);
         }
 
-        std::vector<std::list<std::pair<Key, Value>>> newItems(newCapacity);
+        vector<list<Pair>> newItems(newCapacity);
         Hasher<Key> hasher;
 
         for (auto& list : items) {
-            for (auto& pair : list) {
+            for (auto it = list.rbegin(); it != list.rend(); ++it) {
+                auto& pair = *it;
                 size_t newIndex = hasher(pair.first) % newCapacity;
                 newItems[newIndex].push_front(std::move(pair));
             }

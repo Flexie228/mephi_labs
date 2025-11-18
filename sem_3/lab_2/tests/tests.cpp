@@ -14,7 +14,7 @@ SECTION("Basic Operations") {
     SECTION("Empty table") {
         REQUIRE(table.isEmpty());
         REQUIRE(table.getSize() == 0);
-        REQUIRE(table.find("nonexistent") == nullptr);
+        REQUIRE(table.find("nonexistent").empty());
     }
 
     SECTION("Insert() and find()") {
@@ -25,26 +25,27 @@ SECTION("Basic Operations") {
         REQUIRE(!table.isEmpty());
         REQUIRE(table.getSize() == 3);
 
-        auto* value1 = table.find("one");
-        auto* value2 = table.find("two");
-        auto* value3 = table.find("three");
+        auto value1 = table.find("one");
+        auto value2 = table.find("two");
+        auto value3 = table.find("three");
 
-        REQUIRE(value1 != nullptr);
-        REQUIRE(*value1 == 1);
-        REQUIRE(value2 != nullptr);
-        REQUIRE(*value2 == 2);
-        REQUIRE(value3 != nullptr);
-        REQUIRE(*value3 == 3);
+        REQUIRE(!value1.empty());
+        REQUIRE(value1[0] == 1);
+        REQUIRE(!value2.empty());
+        REQUIRE(value2[0] == 2);
+        REQUIRE(!value3.empty());
+        REQUIRE(value3[0] == 3);
     }
 
-    SECTION("Update value with new by existing key") {
+    SECTION("New value with existing key") {
         table.insert("key", 10);
-        table.insert("key", 20); // value update
+        table.insert("key", 20);
 
-        REQUIRE(table.getSize() == 1);
-        auto* value = table.find("key");
-        REQUIRE(value != nullptr);
-        REQUIRE(*value == 20);
+        REQUIRE(table.getSize() == 2);
+        auto values = table.find("key");
+        REQUIRE(values.size() == 2);
+        REQUIRE(values[0] == 20);
+        REQUIRE(values[1] == 10);
     }
 
     SECTION("Erase() elements") {
@@ -54,40 +55,48 @@ SECTION("Basic Operations") {
         table.erase("one");
         table.erase("nonexistent");
         REQUIRE(table.getSize() == 1);
-        REQUIRE(table.find("one") == nullptr);
-        REQUIRE(table.find("two") != nullptr);
+        REQUIRE(table.find("one").empty());
+        REQUIRE(!table.find("two").empty());
 
         table.erase("two");
         REQUIRE(table.isEmpty());
-        REQUIRE(table.find("two") == nullptr);
+        REQUIRE(table.find("two").empty());
+    }
+    SECTION("removeOne") {
+        table.insert("key", 10);
+        table.insert("key", 20);
+        table.insert("key", 30);
+
+        REQUIRE(table.getSize() == 3);
+
+        table.erase("key", 20);
+        REQUIRE(table.getSize() == 2);
+
+        auto values = table.find("key");
+        REQUIRE(values.size() == 2);
+        REQUIRE(values[0] == 30);
+        REQUIRE(values[1] == 10);
+
+        table.erase("key", 999);
+        REQUIRE(table.getSize() == 2);
     }
 }
 SECTION("Operator []") {
     HashTable<std::string, int> table;
 
     SECTION("Creation and access") {
-        table["first"] = 100;
-        table["second"] = 200;
+        table.insert("first", 100);
+        table.insert("second", 200);
 
         REQUIRE(table.getSize() == 2);
-        REQUIRE(table["first"] == 100);
-        REQUIRE(table["second"] == 200);
+        REQUIRE(table["first"][0] == 100);
+        REQUIRE(table["second"][0] == 200);
     }
 
-    SECTION("Modification by []") {
-        table["key"] = 10;
-        table["key"] = 20;
-
-        REQUIRE(table.getSize() == 1);
-        REQUIRE(table["key"] == 20);
-    }
-
-    SECTION("Default value for new keys") {
-        int& value = table["new_key"];
-        REQUIRE(table["new_key"] == 0);
-        value = 42;
-
-        REQUIRE(table.getSize() == 1);
+    SECTION("empty vector for new keys") {
+        vector<int> value = table["new_key"];
+        REQUIRE(value.empty());
+        REQUIRE(table.getSize() == 0);
     }
 }
 SECTION("Rehashing") {
@@ -110,10 +119,10 @@ SECTION("Rehashing") {
         REQUIRE(table.getCapacity() == 193);
 
         // Verify all elements are still accessible
-        for (int i = 0; i < 100; ++i) {
-            auto* value = table.find(i);
-            REQUIRE(value != nullptr);
-            REQUIRE(*value == "value" + std::to_string(i));
+        for (int i = 0; i < 100; i++) {
+            auto value = table.find(i);
+            REQUIRE(!value.empty());
+            REQUIRE(value[0] == "value" + std::to_string(i));
         }
         REQUIRE(table.getSize() == 100);
     }
@@ -130,14 +139,14 @@ SECTION("Rehashing") {
             REQUIRE(table.getSize() == NUM_ELEMENTS);
 
             for (int i = 0; i < NUM_ELEMENTS; ++i) {
-                auto* value = table.find(i);
-                REQUIRE(value != nullptr);
-                REQUIRE(*value == i * 2);
+                auto value = table.find(i);
+                REQUIRE(!value.empty());
+                REQUIRE(value[0] == i * 2);
             }
         }
 
         SECTION("Mixed operations") {
-            // Insert
+
             for (int i = 0; i < NUM_ELEMENTS; ++i) {
                 table.insert(i, i);
             }
@@ -145,27 +154,33 @@ SECTION("Rehashing") {
             for (int i = 0; i < NUM_ELEMENTS; i += 2) {
                 table.insert(i, i + 1);
             }
-            REQUIRE(table.getSize() == NUM_ELEMENTS);
+            REQUIRE(table.getSize() == 1500000);
 
-            // Delete every 3rd element
             for (int i = 0; i < NUM_ELEMENTS; i += 3) {
                 table.erase(i);
             }
 
-            // Expecting size: 100000 - [100000/3] = 100 - 34 = 66
-            int expectedSize = NUM_ELEMENTS - ((NUM_ELEMENTS + 2) / 3);
+            int deletedKeys = (NUM_ELEMENTS + 2) / 3;
+            int remainingKeys = NUM_ELEMENTS - deletedKeys;
+            int evenRemaining = (remainingKeys + 1) / 2;
+            int oddRemaining = remainingKeys - evenRemaining;
+            int expectedSize = evenRemaining * 2 + oddRemaining;
+
             REQUIRE(table.getSize() == expectedSize);
 
             for (int i = 0; i < NUM_ELEMENTS; ++i) {
-                auto* value = table.find(i);
+                auto values = table.find(i);
                 if (i % 3 == 0) {
-                    REQUIRE(value == nullptr);
+                    REQUIRE(values.empty());
                 } else {
-                    REQUIRE(value != nullptr);
+                    REQUIRE(!values.empty());
                     if (i % 2 == 0) {
-                        REQUIRE(*value == i + 1);
+                        REQUIRE(values.size() == 2);
+                        REQUIRE(values[0] == i + 1);
+                        REQUIRE(values[1] == i);
                     } else {
-                        REQUIRE(*value == i);
+                        REQUIRE(values.size() == 1);
+                        REQUIRE(values[0] == i);
                     }
                 }
             }
@@ -181,11 +196,12 @@ SECTION("Copy Operations") {
         HashTable<std::string, double> copy(original);
 
         REQUIRE(copy.getSize() == original.getSize());
-        REQUIRE(*copy.find("pi") == 3.14159);
-        REQUIRE(*copy.find("e") == 2.71828);
+        REQUIRE(copy.find("pi")[0] == 3.14159);
+        REQUIRE(copy.find("e")[0] == 2.71828);
 
         original.insert("pi", 3.14);
-        REQUIRE(*copy.find("pi") == 3.14159);
+        REQUIRE(copy.find("pi").size() == 1);
+        REQUIRE(copy.find("pi")[0] == 3.14159);
     }
 
     SECTION("Copy assignment") {
@@ -193,23 +209,22 @@ SECTION("Copy Operations") {
         copy = original;
 
         REQUIRE(copy.getSize() == original.getSize());
-        REQUIRE(*copy.find("pi") == 3.14159);
-        REQUIRE(*copy.find("e") == 2.71828);
+        REQUIRE(copy.find("pi")[0] == 3.14159);
+        REQUIRE(copy.find("e")[0] == 2.71828);
     }
 }
 SECTION("Converting Constructor") {
-    std::vector<std::pair<std::string, std::string>> dataBase;
-    dataBase.reserve(10000);
+    vector<std::pair<string, string>> dataBase;
     for (size_t i = 0; i < 10000; i++) {
         dataBase.emplace_back(std::to_string(i), std::to_string(i) + "value");
     }
-    const HashTable table(dataBase);
+    HashTable<string, string> table(dataBase);
     REQUIRE(table.getSize() == 10000);
 
     for (size_t i = 0; i < 10000; i++) {
-        auto* value = table.find(std::to_string(i));
-        REQUIRE(value != nullptr);
-        REQUIRE(*value == std::to_string(i) + "value");
+        auto value = table.find(std::to_string(i));
+        REQUIRE(!value.empty());
+        REQUIRE(value[0] == std::to_string(i) + "value");
     }
 }
 SECTION("Custom Types") {
@@ -227,15 +242,15 @@ SECTION("Custom Types") {
         table.insert("alice", Person{"Alice", 30});
         table.insert("alexey", Person{"Alexey", 31});
 
-        auto* alice = table.find("alice");
-        REQUIRE(alice != nullptr);
-        REQUIRE(alice->name == "Alice");
-        REQUIRE(alice->age == 30);
+        auto alice = table.find("alice");
+        REQUIRE(!alice.empty());
+        REQUIRE(alice[0].name == "Alice");
+        REQUIRE(alice[0].age == 30);
 
-        auto* alexey = table.find("alexey");
-        REQUIRE(alexey != nullptr);
-        REQUIRE(alexey->name == "Alexey");
-        REQUIRE(alexey->age == 31);
+        auto alexey = table.find("alexey");
+        REQUIRE(!alexey.empty());
+        REQUIRE(alexey[0].name == "Alexey");
+        REQUIRE(alexey[0].age == 31);
     }
 }
 }
