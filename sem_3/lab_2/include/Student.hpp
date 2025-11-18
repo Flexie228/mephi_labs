@@ -1,12 +1,15 @@
 #ifndef STUDENT
 #define STUDENT
 
+#include <atomic>
 #include <iostream>
 #include <random>
 #include <string>
 #include <utility>
 #include <vector>
 #include <cctype>
+#include <chrono>
+#include <sstream>
 using namespace std;
 
 struct Phone {
@@ -87,6 +90,7 @@ struct Student {
     }
 
     static Student generate() {
+        static atomic<long long> counter{0};
         std::random_device rd;
         std::mt19937 gen(rd());
         std::uniform_int_distribution<size_t> age_dist(14, 80);
@@ -108,11 +112,26 @@ struct Student {
         student.age = age_dist(gen);
         student.phone = Phone::generate();
 
-        std::string id;
-        for (int i = 0; i < 15; ++i) {
-            id += std::to_string(digit_dist(gen));
+        long long unique_value = ++counter;
+        std::stringstream id_stream;
+
+        // Временная метка (миллисекунды)
+        auto now = std::chrono::system_clock::now();
+        auto timestamp = std::chrono::duration_cast<std::chrono::milliseconds>(
+            now.time_since_epoch()).count();
+
+        // Случайная часть
+        std::string random_part;
+        for (int i = 0; i < 6; ++i) {
+            random_part += std::to_string(digit_dist(gen));
         }
-        student.id = id;
+
+        // Формируем ID: счетчик + временная метка + случайная часть
+        id_stream << std::hex << timestamp << "-"
+                  << std::hex << unique_value << "-"
+                  << random_part;
+
+        student.id = id_stream.str();
 
         return student;
     }
