@@ -50,14 +50,13 @@ struct Student {
     string id;
 
     Student() = default;
-    Student(string  n, string  s, const size_t a, Phone  ph, string id)
-        : name(std::move(n)), surname(std::move(s)), age(a), phone(std::move(ph)), id(std::move(id)) {}
+    Student(string  n, string  s, const size_t a, Phone  ph, string id) : name(std::move(n)), surname(std::move(s)), age(a), phone(std::move(ph)), id(std::move(id)) {}
 
-    bool operator==(const Student& other) const {
+    bool operator== (const Student& other) const {
         return id == other.id;
     }
 
-    bool operator<(const Student& other) const {
+    bool operator< (const Student& other) const {
         return id < other.id;
     }
 
@@ -101,8 +100,7 @@ struct Student {
 
         Student student;
 
-        const string namePrefix = generatePrefix();
-        student.name = namePrefix + "_" + firstNames[name_dist(gen)];
+        student.name = firstNames[name_dist(gen)];
 
         const string surnamePrefix = generatePrefix();
         student.surname = surnamePrefix + "_" + lastNames[name_dist(gen)];
@@ -111,7 +109,7 @@ struct Student {
         student.phone = Phone::generate();
 
         std::string id;
-        for (int i = 0; i < 8; ++i) {
+        for (int i = 0; i < 15; ++i) {
             id += std::to_string(digit_dist(gen));
         }
         student.id = id;
