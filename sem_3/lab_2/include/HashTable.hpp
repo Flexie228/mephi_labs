@@ -39,12 +39,12 @@ public:
     HashTable() : items(capacity) {}
     HashTable(const HashTable& other) : capacityIndex(other.capacityIndex), size(other.size), capacity(other.capacity), items(other.items) {}
     explicit HashTable(const std::vector<std::pair<Key, Value>>& dataBase) {
-        size = 0;
+        const size_t expectedSize = dataBase.size();
         constexpr size_t capacitiesSize = std::size(capacities);
         capacityIndex = 0;
 
         for (; capacityIndex < capacitiesSize; capacityIndex++) {
-            if (static_cast<float>(size) < static_cast<float>(capacities[capacityIndex]) * LoadFactor)
+            if (static_cast<float>(expectedSize) < static_cast<float>(capacities[capacityIndex]) * LoadFactor)
                 break;
         }
         if (capacityIndex >= capacitiesSize) throwError(CAPACITY_MAXED);
@@ -87,7 +87,7 @@ public:
     }
     void insert(const Key& key, const Value& value) {
         size_t index = getItemIndex(key);
-        size_t rel;
+        size_t rel = 0;
 
         for (auto& pair : items[index]) {
             if (pair.first == key) {
@@ -128,6 +128,17 @@ public:
     vector<Value> operator[](const Key& key) {
         return find(key);
     }
+
+    bool contains(const Key& key) const {
+        size_t index = getItemIndex(key);
+        for (const auto& pair : items[index]) {
+            if (pair.first == key) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     void clear() {
         vector<list<Pair>> newItems(capacity);
         capacityIndex = 0;
