@@ -13,6 +13,7 @@ public:
     virtual bool ContainsKey(const Key& key) const = 0;
     virtual void Add(const Key& key, const Value& value) = 0;
     virtual void Remove(const Key& key) = 0;
+    virtual void Remove(const Key& key, const Value& value) = 0;
     virtual void Clear() = 0;
 
     [[nodiscard]] virtual size_t GetCount() const = 0;
@@ -29,10 +30,11 @@ public:
     explicit IDictionaryHT(const vector<pair<Key, Value>> dataBase) : hashTable(dataBase) {}
     ~IDictionaryHT() override = default;
 
-    Value* Get(const Key& key) const { return hashTable.find(key); }
-    bool ContainsKey(const Key& key) const override { return hashTable.find(key) != nullptr; }
+    vector<Value> Get(const Key& key) const { return hashTable.find(key); }
+    bool ContainsKey(const Key& key) const override { return !hashTable.find(key).empty(); }
     void Add(const Key& key, const Value& value) override { hashTable.insert(key, value); }
     void Remove(const Key& key) override { hashTable.erase(key); }
+    void Remove(const Key& key, const Value& value) override { hashTable.erase(key, value); }
     void Clear() override { hashTable.clear(); }
 
     [[nodiscard]] size_t GetCount() const override { return hashTable.getSize(); }
@@ -55,7 +57,7 @@ public:
     bool ContainsKey(const Key& key) const override {return searchTree.find(key) != nullptr; }
     void Add(const Key& key, const Value& value) override { searchTree.insert(key, value); }
     void Remove(const Key& key) override { searchTree.removeAll(key); }
-    void RemoveOne(const Key& key, const Value& value) { searchTree.removeOne(key, value); }
+    void Remove(const Key& key, const Value& value) override { searchTree.removeOne(key, value); }
     void Clear() override { searchTree.clear(); }
 
 
