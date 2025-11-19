@@ -4,6 +4,7 @@
 #include <string>
 #include <cstring>
 #include <cmath>
+#include "Student.hpp"
 
 template<typename Key>
 class Hasher;
@@ -41,6 +42,15 @@ public:
         std::memcpy(&mantissaBits, &mantissa, sizeof(mantissa));
 
         return (mantissaBits ^ exp);
+    }
+};
+
+template<>
+class Hasher<Phone> {
+public:
+    size_t operator()(const Phone& phone) const {
+        Hasher<std::string> hasher;
+        return hasher(phone.number);
     }
 };
 
