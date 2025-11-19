@@ -15,38 +15,45 @@ public:
     explicit Cache(const size_t size) : maxSize(size), cacheMap() {}
 
     // Получить значение по ключу (обновляет позицию в LRU)
-    Value* Get(const Key& key) {
-        auto* listIterPtr = cacheMap.Get(key);  // указатель на итератор
-        if (!listIterPtr) return nullptr;
-        auto listIter = *listIterPtr;
-        cacheList.splice(cacheList.begin(), cacheList, listIter);
-        return &(listIter->second);
+    vector<Value> Get(const Key& key) {
+        auto iterators = cacheMap.Get(key);
+        vector<Value> result;
+
+        if (iterators.empty()) return result;
+
+        for (auto listIter : iterators) {
+            result.push_back(listIter->second);
+            cacheList.splice(cacheList.begin(), cacheList, listIter);
+        }
+        return result;
     }
 
     void Put(const Key& key, const Value& value) {
-        auto* listIterPtr = cacheMap.Get(key);  // указатель на итератор
-        if (!listIterPtr) {
+        auto iterators = cacheMap.Get(key);
+        if (iterators.empty()) {
             if (cacheList.size() == maxSize) {
-                auto last = cacheList.end();
-                --last;
+                auto last = prev(cacheList.end());
                 cacheMap.Remove(last->first);
                 cacheList.pop_back();
             }
             cacheList.push_front({key, value});
             cacheMap.Add(key, cacheList.begin());
-            return;
+        } else {
+            auto listIter = iterators[0];                       // Только первый
+            listIter->second = value;
+            cacheList.splice(cacheList.begin(), cacheList, listIter);
         }
-        auto listIter = *listIterPtr;
-        listIter->second = value;
-        cacheList.splice(cacheList.begin(), cacheList, listIter);
     }
 
-    void Remove(const Key& key) {
-        auto* listIterPtr = cacheMap.Get(key);
-        if (!listIterPtr) return;
-        auto listIter = *listIterPtr;
-        cacheList.erase(listIter);  // Удаляем из списка
-        cacheMap.Remove(key);  // Удаляем из словаря
+    void Remove(const Key& key) {                                                       // Удаляем все элементы с одинаковым ключом
+        auto iterators = cacheMap.Get(key);
+        if (iterators.empty()) return;
+
+        for (auto listIter : iterators) {
+            cacheList.erase(listIter);
+        }
+
+        cacheMap.Remove(key);
     }
 
     void Clear() { cacheList.clear(); cacheMap.Clear(); }

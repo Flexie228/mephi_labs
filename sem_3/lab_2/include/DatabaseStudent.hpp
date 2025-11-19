@@ -1,0 +1,8 @@
+//
+// Created by tim on 19.11.2025.
+//
+
+#ifndef LAB_2_DATABASESTUDENT_HPP
+#define LAB_2_DATABASESTUDENT_HPP
+
+#endif //LAB_2_DATABASESTUDENT_HPP
