@@ -208,8 +208,14 @@ public:
         }
         return result;
     }
-};
+    vector<pair<string, Student>> getCacheContents() const {
+        return cache.getAll();
+    }
 
-const Student DataBaseStudent::DELETED_MARKER = Student("DELETED", "DELETED", 0, Phone(""));
+    const IDictionaryHT<string, string>& getNameIndex() const { return nameIndex; }
+    const IDictionaryHT<string, string>& getSurnameIndex() const { return surnameIndex; }
+    const IDictionaryHT<Phone, string>& getPhoneIndex() const { return phoneIndex; }
+    const IDictionaryAVL<size_t, string>& getAgeIndex() const { return ageIndex; }
+};
 
 #endif

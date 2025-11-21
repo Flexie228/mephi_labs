@@ -61,6 +61,14 @@ public:
     bool ContainsKey(const Key& key) const { return cacheMap.ContainsKey(key); }
     [[nodiscard]] size_t Size() const { return cacheList.size(); }
     [[nodiscard]] size_t GetMaxSize() const { return maxSize; }
+
+    vector<pair<Key, Value>> getAll() const {
+        vector<pair<Key, Value>> result;
+        for (const auto& pair : cacheList) {
+            result.push_back(pair);
+        }
+        return result;
+    }
 };
 
 #endif
