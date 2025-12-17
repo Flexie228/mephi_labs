@@ -1,0 +1,8 @@
+//
+// Created by tim on 01.12.2025.
+//
+
+#ifndef LAB_1_LZWCOMPRESSOR_HPP
+#define LAB_1_LZWCOMPRESSOR_HPP
+
+#endif //LAB_1_LZWCOMPRESSOR_HPP

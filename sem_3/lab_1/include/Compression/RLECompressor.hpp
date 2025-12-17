@@ -1,0 +1,8 @@
+//
+// Created by tim on 28.11.2025.
+//
+
+#ifndef LAB_1_RLECOMPRESSOR_HPP
+#define LAB_1_RLECOMPRESSOR_HPP
+
+#endif //LAB_1_RLECOMPRESSOR_HPP

@@ -1,0 +1,8 @@
+//
+// Created by tim on 27.11.2025.
+//
+
+#ifndef LAB_1_HUFFMANCOMPRESSOR_HPP
+#define LAB_1_HUFFMANCOMPRESSOR_HPP
+
+#endif //LAB_1_HUFFMANCOMPRESSOR_HPP
