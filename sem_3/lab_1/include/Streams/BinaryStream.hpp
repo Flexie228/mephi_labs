@@ -51,7 +51,11 @@ private:
 
 public:
     explicit BinaryStream(const string& filename) : Stream(filename) {}
-    ~BinaryStream() override = default;
+    ~BinaryStream() override {
+        if (isOpen()) {
+            Close();
+        }
+    }
 
     void Open() override {
         if (isOpen()) return;
@@ -66,7 +70,18 @@ public:
         OpenFlag = true;
         streamPosition = 0;
         WriteMode = false;
-        fillBuffer();
+
+        long current = ftell(file);
+        fseek(file, 0, SEEK_END);
+        long size = ftell(file);
+        fseek(file, current, SEEK_SET);
+
+        if (size > 0) {
+            fillBuffer();
+        } else {
+            bufferSize = 0;
+            bufferPosition = 0;
+        }
     }
 
     void Close() override {
@@ -87,9 +102,10 @@ public:
         streamPosition = 0;
     }
 
-    size_t Seek(const size_t pos) override {
+    size_t Seek(size_t pos) override {
         if (!isOpen()) throwError(FILE_NOT_OPENED);
-        if (static_cast<long>(pos) > getSize()) throwError(SEEK_ERROR);
+        long fileSize = getSize();
+        if (pos > static_cast<size_t>(getSize()) && fileSize >= 0) throwError(SEEK_ERROR);
 
         if (WriteMode) {
             writeFromBuffer();

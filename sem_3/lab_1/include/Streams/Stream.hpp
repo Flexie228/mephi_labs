@@ -31,10 +31,15 @@ public:
 
     [[nodiscard]] bool isOpen() const { return OpenFlag; }
     [[nodiscard]] bool isWrite() const { return WriteMode; }
+    [[nodiscard]] virtual long getPosition() const {
+        if (!isOpen()) return 0;
+        return static_cast<long>(streamPosition);
+    }
     [[nodiscard]] long getSize() const {
         if (!isOpen()) return 0;
 
         long currentPosition = ftell(file);
+        fflush(file);
         fseek(file, 0, SEEK_END);
         long fileSize = ftell(file);
         fseek(file, currentPosition, SEEK_SET);

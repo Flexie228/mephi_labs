@@ -2,6 +2,7 @@
 #define READ_STREAM
 
 #include <cstring>
+
 #include "../Exceptions.hpp"
 #include "Stream.hpp"
 
@@ -14,10 +15,14 @@ private:
     }
 public:
     explicit ReadStream(const string& filename) : Stream(filename) {}
-    ~ReadStream() override = default;
+    ~ReadStream() override {
+        if (isOpen()) {
+            Close();
+        }
+    }
 
     void Open() override {
-        if (file) return;
+        if (isOpen()) return;
         if (filename.empty()) throwError(FILE_EMPTY);
 
         file = fopen(filename.c_str(), "rb");
@@ -38,17 +43,18 @@ public:
         bufferSize = 0;
         streamPosition = 0;
     }
-    size_t Seek(const size_t pos) override {
-        if (!file || !OpenFlag) throwError(FILE_NOT_OPENED);
-        if (static_cast<long>(pos) > getSize()) throwError(SEEK_ERROR);
+    size_t Seek(size_t pos) override {
+        if (!isOpen()) throwError(FILE_NOT_OPENED);
+        long fileSize = getSize();
+        if (pos > static_cast<size_t>(getSize()) && fileSize >= 0) throwError(SEEK_ERROR);
         int result = fseek(file, static_cast<long>(pos), SEEK_SET);
-        if (result != 0) throwError(SEEK_ERROR);
+        if (result != 0) throwError(SEEK_ERROR_2);
         streamPosition = ftell(file);
         fillBuffer();
         return streamPosition;
     }
     char ReadChar() {
-        if (!file || !OpenFlag) throwError(FILE_NOT_OPENED);
+        if (!isOpen()) throwError(FILE_NOT_OPENED);
 
         if (bufferPosition >= bufferSize) {
             if (feof(file)) throwError(EOF_FOUND);
@@ -61,7 +67,7 @@ public:
         return symbol;
     }
     string ReadWord() {
-        if (!file || !OpenFlag) throwError(FILE_NOT_OPENED);
+        if (!isOpen()) throwError(FILE_NOT_OPENED);
         string result;
 
         do {
@@ -95,33 +101,39 @@ public:
         return result;
     }
     string ReadLine() {
-        if (!file || !OpenFlag) throwError(FILE_NOT_OPENED);
+        if (!isOpen()) throwError(FILE_NOT_OPENED);
         string result;
+
         do {
-            // Если буфер пуст - заполняем
             if (bufferPosition >= bufferSize) {
                 fillBuffer();
-                if (bufferSize == 0) break; // конец файла
+                if (bufferSize == 0) break;
             }
 
-            // Ищем '\n' в текущем буфере
             if (const auto* newlinePos = static_cast<char*>(std::memchr(buffer + bufferPosition, '\n', bufferSize - bufferPosition))) {
                 size_t chunkSize = newlinePos - (buffer + bufferPosition);
                 result.append(buffer + bufferPosition, chunkSize);
-                bufferPosition += chunkSize + 1; // +1 чтобы пропустить '\n'
+                bufferPosition += chunkSize + 1;
                 streamPosition += chunkSize + 1;
                 break;
             } else {
                 result.append(buffer + bufferPosition, bufferSize - bufferPosition);
                 streamPosition += bufferSize - bufferPosition;
-                bufferPosition = bufferSize; // буфер пуст
+                bufferPosition = bufferSize;
+                if (bufferSize < BUFFER_SIZE) break;
             }
-        } while (bufferSize != 0);
+        } while (true);
+
+        // Убираем \r из конца строки если есть
+        if (!result.empty() && result.back() == '\r') {
+            result.pop_back();
+        }
+
         return result;
     }
     // ReSharper disable once CppMemberFunctionMayBeConst
     string ReadTextFile() {
-        if (!file || !OpenFlag) throwError(FILE_NOT_OPENED);
+        if (!isOpen()) throwError(FILE_NOT_OPENED);
 
         // Сохраняем текущую позицию
         long currentPos = ftell(file);
@@ -142,7 +154,7 @@ public:
         return result;
     }
     [[nodiscard]] bool isEOF() const {
-        if (!file || !OpenFlag) return true;
+        if (!isOpen()) return true;
         if (bufferPosition < bufferSize) return false;
 
         return feof(file);

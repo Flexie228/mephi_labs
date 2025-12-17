@@ -3,7 +3,7 @@
 
 #include <cstring>
 
-#include "../Stream.hpp"
+#include "Stream.hpp"
 #include "../Exceptions.hpp"
 
 class WriteStream final : public Stream {
@@ -24,7 +24,11 @@ private:
     }
 public:
     explicit WriteStream(const string& filename) : Stream(filename){}
-    ~WriteStream() override = default;
+    ~WriteStream() override {
+        if (isOpen()) {
+            Close();
+        }
+    }
 
     void Open() override {
         if (isOpen()) return;
@@ -49,9 +53,10 @@ public:
         bufferSize = 0;
         streamPosition = 0;
     }
-    size_t Seek(const size_t pos) override {
+    size_t Seek(size_t pos) override {
         if (!isOpen()) throwError(FILE_NOT_OPENED);
-        if (static_cast<long>(pos) > getSize()) throwError(SEEK_ERROR);
+        long fileSize = getSize();
+        if (pos > static_cast<size_t>(getSize()) && fileSize >= 0) throwError(SEEK_ERROR);
 
         writeFromBuffer();
 

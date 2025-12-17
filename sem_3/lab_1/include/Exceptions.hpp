@@ -15,8 +15,12 @@ enum ErrorCode {
     FILE_EMPTY = 3,
     FILE_OPEN_ERROR = 4,
     SEEK_ERROR = 5,
-    FILE_READ_ERROR = 6,
-    FILE_WRITE_ERROR = 7,
+    SEEK_ERROR_2 = 6,
+    FILE_READ_ERROR = 7,
+    FILE_WRITE_ERROR = 8,
+    HUFFMAN_ERROR,
+    RLE_ERROR,
+    LZW_ERROR,
     ERRORS_COUNT
 };
 
@@ -26,8 +30,12 @@ constexpr std::array<Error, ERRORS_COUNT> Errors = {{
     {FILE_EMPTY, "File is empty.\n"},
     {FILE_OPEN_ERROR, "File open error occurred.\n"},
     {SEEK_ERROR, "Seek operation failed.\n"},
+    {SEEK_ERROR_2, "Seek operation failed. 2222\n"},
     {FILE_READ_ERROR, "File read error occurred.\n"},
-    {FILE_WRITE_ERROR, "Write operation failed.\n"}
+    {FILE_WRITE_ERROR, "Write operation failed.\n"},
+    {HUFFMAN_ERROR, "Invalid Huffman code sequence"},
+    {RLE_ERROR, "Invalid RLE format"},
+    {LZW_ERROR, "Invalid LZW format"}
 }};
 
 inline void throwError(const ErrorCode code) {

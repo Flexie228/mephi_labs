@@ -87,9 +87,10 @@ public:
         streamPosition = 0;
     }
 
-    size_t Seek(const size_t pos) override {
+    size_t Seek(size_t pos) override {
         if (!isOpen()) throwError(FILE_NOT_OPENED);
-        if (static_cast<long>(pos) > getSize()) throwError(SEEK_ERROR);
+        long fileSize = getSize();
+        if (pos > static_cast<size_t>(getSize()) && fileSize >= 0) throwError(SEEK_ERROR);
 
         if (WriteMode) {
             writeFromBuffer();
@@ -228,13 +229,21 @@ public:
         if (!isOpen()) throwError(FILE_NOT_OPENED);
         switchToWriteMode();
 
-        for (size_t i = 0; i < data.length(); i++) {
+        size_t dataPos = 0;
+        size_t dataSize = data.length();
+
+        while (dataPos < dataSize) {
+            size_t freeSpace = BUFFER_SIZE - bufferPosition;
+            size_t chunkSize = std::min(freeSpace, dataSize - dataPos);
+            std::memcpy(buffer + bufferPosition, data.data() + dataPos, chunkSize);
+            bufferPosition += chunkSize;
+            dataPos += chunkSize;
+
             if (bufferPosition >= BUFFER_SIZE) {
                 writeFromBuffer();
             }
-            buffer[bufferPosition] = data[i];
-            bufferPosition++;
         }
+
         streamPosition += data.length();
     }
 
